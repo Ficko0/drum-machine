@@ -1,101 +1,84 @@
-import Image from "next/image";
+"use client";
+
+import { useEffect, useState } from "react";
+import styled from "@emotion/styled";
+import Modal from "./components/Modal";
+import Header from "./components/Header";
+import Drum from "./components/Drum";
+
+const StyledMainContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6.5em;
+  align-items: center;
+  padding: 6em 10em;
+`;
+
+const StyledContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(2, auto);
+  gap: 1rem;
+  width: 100%;
+`;
+
+const sounds = {
+  "Crash Cymbal": "crash-symbal.mp3",
+  "Snare Drum": "snare-808-drum.mp3",
+  "Long Ride Cymbal": "long-cymbal.mp3",
+  Tom: "tom.mp3",
+  "Hi-Hat": "hi-hat.mp3",
+  "Floor Tom": "floor-tom.mp3",
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [slots, setSlots] = useState<{ key: string; sound: string }[]>(
+    Array(12).fill({ key: "", sound: "" })
+  );
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      const slot = slots.find((slot) => slot.key === event.key);
+      if (slot && slot.sound) {
+        new Audio(`/${slot.sound}`).play();
+      }
+    };
+    window.addEventListener("keydown", handleKeyPress);
+    return () => {
+      window.removeEventListener("keydown", handleKeyPress);
+    };
+  }, [slots]);
+
+  const handleAssign = (index: number, key: string, sound: string) => {
+    setSlots((prevSlots) => {
+      const newSlots = [...prevSlots];
+      newSlots[index] = { key, sound: sounds[sound] };
+      return newSlots;
+    });
+  };
+
+  return (
+    <StyledMainContainer>
+      <Header />
+      <StyledContainer>
+        {slots.map((slot, i) => (
+          <Drum
+            key={i}
+            index={i}
+            onDrumClick={() => setSelectedSlot(i)}
+            assignedKey={slot.key}
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        ))}
+      </StyledContainer>
+      {selectedSlot !== null && (
+        <Modal
+          index={selectedSlot}
+          onClose={() => setSelectedSlot(null)}
+          onKeyAssign={handleAssign}
+        />
+      )}
+    </StyledMainContainer>
   );
 }
